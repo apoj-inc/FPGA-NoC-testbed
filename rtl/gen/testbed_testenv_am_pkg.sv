@@ -3,9 +3,9 @@
 
 package testbed_testenv_am_pkg;
 
-    localparam TESTBED_TESTENV_AM_APB_DATA_WIDTH = 128;
-    localparam TESTBED_TESTENV_AM_APB_MIN_ADDR_WIDTH = 11;
-    localparam TESTBED_TESTENV_AM_APB_SIZE = 'h700;
+    localparam TESTBED_TESTENV_AM_DATA_WIDTH = 128;
+    localparam TESTBED_TESTENV_AM_MIN_ADDR_WIDTH = 11;
+    localparam TESTBED_TESTENV_AM_SIZE = 'h700;
     localparam DMA_CHANNEL_COUNT = 'h8;
     localparam MAX_ROUTERS_COUNT = 'h100;
     localparam MAX_AXI_DATA_WIDTH = 'h400;

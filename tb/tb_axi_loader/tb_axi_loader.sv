@@ -85,7 +85,7 @@ module tb_axi_loader (
         rready        = axi_if.RREADY;
     end
 
-    axi_master_loader #(
+    testenv_axi_master_loader #(
         .AXI_DATA_WIDTH(8),
         .AXI_ADDR_WIDTH(12),
         .AXI_ID_W_WIDTH(5),

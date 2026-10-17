@@ -1,7 +1,6 @@
-`include "defines.svh"
 `include "axi_defines.svh"
 
-module axi_pmu #(
+module testbed_axi_pmu #(
     parameter AXI_DATA_WIDTH   = 32,
     parameter AXI_ADDR_WIDTH   = 16,
     parameter AXI_ID_R_WIDTH   = 4 ,

@@ -1,7 +1,6 @@
-`include "defines.svh"
 `include "axi_defines.svh"
 
-module axi_master_loader #(
+module testbed_axi_master_loader #(
     parameter AXI_DATA_WIDTH = 32,
     parameter AXI_ADDR_WIDTH = 16,
     parameter AXI_ID_W_WIDTH = 5 ,
@@ -14,8 +13,8 @@ module axi_master_loader #(
     parameter AXI_DATA_BYTES = AXI_DATA_WIDTH / 8 + (AXI_DATA_WIDTH % 8 != 0)                       ,
     parameter AXI_MAX_ID_WIDTH = (AXI_ID_W_WIDTH > AXI_ID_R_WIDTH) ? AXI_ID_W_WIDTH : AXI_ID_R_WIDTH
 ) (
-    input  logic                        clk_in      ,
-    input  logic                        rst_n_in    ,
+    input  logic                        clk_dma     ,
+    input  logic                        rst_n_dma   ,
 
     input  logic                        resp_wait_i ,
     input  logic [AXI_MAX_ID_WIDTH-1:0] id_i        ,
@@ -113,8 +112,8 @@ module axi_master_loader #(
         .DATA_WIDTH (AXI_ADDR_WIDTH + AXI_MAX_ID_WIDTH + 1 + 8),
         .ADDR_WIDTH (FIFO_ADDR_WIDTH)
     ) u_stream_fifo_w (
-        .clk_wr   (clk_in                                        ),
-        .rst_n_wr (rst_n_in                                      ),
+        .clk_wr   (clk_dma                                       ),
+        .rst_n_wr (rst_n_dma                                     ),
 
         .data_i   ({resp_wait_i, axaddr_i, axlen_i, id_i}        ),
         .valid_i  (fifo_push_i & write_i                         ),
@@ -219,8 +218,8 @@ module axi_master_loader #(
         .DATA_WIDTH (1 + 8 + AXI_DATA_WIDTH + AXI_DATA_BYTES),
         .ADDR_WIDTH (FIFO_ADDR_WIDTH)
     ) u_stream_fifo_awlen (
-        .clk_wr   (clk_in                                                 ),
-        .rst_n_wr (rst_n_in                                               ),
+        .clk_wr   (clk_dma                                                ),
+        .rst_n_wr (rst_n_dma                                              ),
 
         .data_i   ({resp_wait_i, axlen_i, wdata_i, wstrb_i}               ),
         .valid_i  (fifo_push_i & write_i                                  ),
@@ -265,8 +264,8 @@ module axi_master_loader #(
         .DATA_WIDTH (AXI_ADDR_WIDTH + AXI_MAX_ID_WIDTH + 1 + 8),
         .ADDR_WIDTH (FIFO_ADDR_WIDTH)
     ) u_stream_fifo_r (
-        .clk_wr   (clk_in                                        ),
-        .rst_n_wr (rst_n_in                                      ),
+        .clk_wr   (clk_dma                                       ),
+        .rst_n_wr (rst_n_dma                                     ),
 
         .data_i   ({resp_wait_i, axaddr_i, axlen_i, id_i}        ),
         .valid_i  (fifo_push_i & ~write_i                        ),

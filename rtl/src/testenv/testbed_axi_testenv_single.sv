@@ -1,6 +1,6 @@
 `include "axi_defines.svh"
 
-module axi_testenv_single #(
+module testbed_axi_testenv_single #(
     parameter ROUTERS_COUNT       = 16 ,
 
     parameter AXI_DATA_WIDTH      = 32 ,
@@ -51,8 +51,7 @@ module axi_testenv_single #(
     logic [AXI_DATA_WIDTH-1:0]   wdata     ;
     logic [AXI_DATA_BYTES-1:0]   wstrb     ;
     
-    logic start, start_resynced, start_waiter, start_resync_ready;
-    assign start = ld_start_i;
+    logic ld_start_resynced, ld_read_pmu_resynced;
 
     logic [ROUTERS_COUNT-1:0] ld_idle    , ld_idle_resynced    ;
     logic [ROUTERS_COUNT-1:0] ld_finished, ld_finished_resynced;
@@ -71,7 +70,7 @@ module axi_testenv_single #(
     assign command_ready_o = '1;
 
 
-    dma_task_dispatcher #(
+    testbed_dma_task_dispatcher #(
         .EXT_FIFO_DATA_WIDTH (EXT_FIFO_DATA_WIDTH),
 
         .ROUTERS_COUNT       (ROUTERS_COUNT      ),
@@ -80,7 +79,7 @@ module axi_testenv_single #(
         .AXI_ID_W_WIDTH      (AXI_ID_W_WIDTH     ),
         .AXI_ID_R_WIDTH      (AXI_ID_R_WIDTH     ),
         .AXI_ADDR_WIDTH      (AXI_ADDR_WIDTH     )
-    ) u_dma_task_dispatcher (
+    ) u_testbed_dma_task_dispatcher (
         .clk         (clk_dma             ),
         .rst_n       (rst_n_dma           ),
 
@@ -99,54 +98,61 @@ module axi_testenv_single #(
 
     cdc_stream_afifo #(
         .DATA_WIDTH (1),
-        .ADDR_WIDTH (2)
+        .ADDR_WIDTH (4)
     ) u_cdc_stream_afifo_start_resync (
-        .clk_wr   (clk_dma           ),
-        .rst_n_wr (rst_n_dma         ),
+        .clk_wr   (clk_dma          ),
+        .rst_n_wr (rst_n_dma        ),
 
-        .data_i   (start_waiter      ),
-        .valid_i  ('1                ),
-        .ready_o  (start_resync_ready),
-        .free_o   (                  ),
+        .data_i   ('1               ),
+        .valid_i  (ld_start_i       ),
+        .ready_o  (                 ),
+        .free_o   (                 ),
 
-        .clk_rd   (clk_axi           ),
-        .rst_n_rd (rst_n_axi         ),
+        .clk_rd   (clk_axi          ),
+        .rst_n_rd (rst_n_axi        ),
 
-        .data_o   (start_resynced    ),
-        .valid_o  (                  ),
-        .ready_i  ('1                ),
-        .count_o  (                  )
+        .data_o   (                 ),
+        .valid_o  (ld_start_resynced),
+        .ready_i  ('1               ),
+        .count_o  (                 )
     );
 
-    always @(posedge clk_dma or negedge rst_n_dma) begin
-        if (!rst_n_dma) begin
-            start_waiter <= '0;
-        end
-        else begin
-            if (start) begin
-                start_waiter <= '1;
-            end
-            if (start_waiter && start_resync_ready) begin
-                start_waiter <= '0;
-            end
-        end
-    end
+    cdc_stream_afifo #(
+        .DATA_WIDTH (1),
+        .ADDR_WIDTH (4)
+    ) u_cdc_stream_afifo_pmu_collect_resync (
+        .clk_wr   (clk_dma             ),
+        .rst_n_wr (rst_n_dma           ),
 
-    dma_pmu_collector #(
+        .data_i   ('1                  ),
+        .valid_i  (ld_read_pmu_i       ),
+        .ready_o  (                    ),
+        .free_o   (                    ),
+
+        .clk_rd   (clk_axi             ),
+        .rst_n_rd (rst_n_axi           ),
+
+        .data_o   (                    ),
+        .valid_o  (ld_read_pmu_resynced),
+        .ready_i  ('1                  ),
+        .count_o  (                    )
+    );
+
+    testbed_dma_pmu_collector #(
         .PMU_METRIC_COUNT    (PMU_METRIC_COUNT   ),
         .PMU_DATA_WIDTH      (PMU_DATA_WIDTH     ),
 
         .ROUTERS_COUNT       (ROUTERS_COUNT      ),
 
         .EXT_FIFO_DATA_WIDTH (EXT_FIFO_DATA_WIDTH)
-    ) u_dma_pmu_collector (
+    ) u_testbed_dma_pmu_collector (
         .clk           (clk_axi              ),
         .rst_n         (rst_n_axi            ),
 
         .pmu_addr_o    (pmu_addr             ),
         .pmu_data_i    (pmu_data             ),
 
-        .ld_read_pmu_i (ld_read_pmu_i        ),
+        .ld_read_pmu_i (ld_read_pmu_resynced ),
 
         .dma_valid_o   (pmu_resync_fifo_valid),
         .dma_ready_i   (pmu_resync_fifo_ready),
@@ -202,7 +208,7 @@ module axi_testenv_single #(
                 .data_o   ({ld_idle_resynced[i], ld_finished_resynced[i], ld_rdata_resynced})
             );
 
-            axi_master_loader #(
+            testbed_axi_master_loader #(
                 .AXI_DATA_WIDTH (AXI_DATA_WIDTH   ),
                 .AXI_ADDR_WIDTH (AXI_ADDR_WIDTH   ),
                 .AXI_ID_W_WIDTH (AXI_ID_W_WIDTH   ),
@@ -210,7 +216,7 @@ module axi_testenv_single #(
 
                 .FIFO_DEPTH     (AXI_LD_FIFO_DEPTH),
                 .LOADER_ID      (i                )
-            ) u_axi_master_loader (
+            ) u_testbed_axi_master_loader (
                 .clk_dma     (clk_dma          ),
                 .rst_n_dma   (rst_n_dma        ),
 
@@ -226,7 +232,7 @@ module axi_testenv_single #(
                 .clk_axi     (clk_axi          ),
                 .rst_n_axi   (rst_n_axi        ),
 
-                .start_i     (start_resynced   ),
+                .start_i     (ld_start_resynced),
                 .idle_o      (ld_idle[i]       ),
                 .finished_o  (ld_finished[i]   ),
 
@@ -235,7 +241,7 @@ module axi_testenv_single #(
                 .m_axi_if_o  (m_axi_if_o[i]    )
             );
 
-            axi_pmu #(
+            testbed_axi_pmu #(
                 .AXI_DATA_WIDTH   (AXI_DATA_WIDTH  ),
                 .AXI_ADDR_WIDTH   (AXI_ADDR_WIDTH  ),
                 .AXI_ID_R_WIDTH   (AXI_ID_R_WIDTH  ),
@@ -243,7 +249,7 @@ module axi_testenv_single #(
 
                 .PMU_METRIC_COUNT (PMU_METRIC_COUNT),
                 .PMU_DATA_WIDTH   (PMU_DATA_WIDTH  )
-            ) u_axi_pmu (
+            ) u_testbed_axi_pmu (
                 .aclk      (clk_axi         ),
                 .aresetn   (rst_n_axi       ),
                 .enable    (!ld_idle[i]     ),

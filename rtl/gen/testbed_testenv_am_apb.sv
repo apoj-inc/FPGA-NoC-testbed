@@ -31,10 +31,10 @@ module testbed_testenv_am_apb (
 
     `ifndef SYNTHESIS
         initial begin
-            assert_bad_addr_width: assert($bits(s_apb.PADDR) >= testbed_testenv_am_pkg::TESTBED_TESTENV_AM_APB_MIN_ADDR_WIDTH)
-                else $error("Interface address width of %0d is too small. Shall be at least %0d bits", $bits(s_apb.PADDR), testbed_testenv_am_pkg::TESTBED_TESTENV_AM_APB_MIN_ADDR_WIDTH);
-            assert_bad_data_width: assert($bits(s_apb.PWDATA) == testbed_testenv_am_pkg::TESTBED_TESTENV_AM_APB_DATA_WIDTH)
-                else $error("Interface data width of %0d is incorrect. Shall be %0d bits", $bits(s_apb.PWDATA), testbed_testenv_am_pkg::TESTBED_TESTENV_AM_APB_DATA_WIDTH);
+            assert_bad_addr_width: assert($bits(s_apb.PADDR) >= testbed_testenv_am_pkg::TESTBED_TESTENV_AM_MIN_ADDR_WIDTH)
+                else $error("Interface address width of %0d is too small. Shall be at least %0d bits", $bits(s_apb.PADDR), testbed_testenv_am_pkg::TESTBED_TESTENV_AM_MIN_ADDR_WIDTH);
+            assert_bad_data_width: assert($bits(s_apb.PWDATA) == testbed_testenv_am_pkg::TESTBED_TESTENV_AM_DATA_WIDTH)
+                else $error("Interface data width of %0d is incorrect. Shall be %0d bits", $bits(s_apb.PWDATA), testbed_testenv_am_pkg::TESTBED_TESTENV_AM_DATA_WIDTH);
         end
     `endif
 

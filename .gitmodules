@@ -1,0 +1,15 @@
+[submodule "build_system"]
+	path = build_system
+	url = git@github.com:apoj-inc/build_system.git
+[submodule "submodules/src/Cyclone-V-PCIe-AVMM-DMA"]
+	path = submodules/src/Cyclone-V-PCIe-AVMM-DMA
+	url = git@github.com:apoj-inc/Cyclone-V-PCIe-AVMM-DMA.git
+[submodule "submodules/src/Kintex-7-PCIe-DMA"]
+	path = submodules/src/Kintex-7-PCIe-DMA
+	url = git@github.com:apoj-inc/Kintex-7-PCIe-DMA.git
+[submodule "submodules/src/AXI-NoC-with-built-in-PMUs"]
+	path = submodules/src/AXI-NoC-with-built-in-PMUs
+	url = git@github.com:apoj-inc/AXI-NoC-with-built-in-PMUs.git
+[submodule "submodules/src/rtl-lib"]
+	path = submodules/src/rtl-lib
+	url = git@github.com:apoj-inc/rtl-lib.git

@@ -1,0 +1,117 @@
+`ifndef __TESTBED__TESTENV__RDL__
+`define __TESTBED__TESTENV__RDL__
+
+addrmap testbed_testenv_am #(
+    bit DMA_CHANNEL_COUNT  = 8   ,
+    bit MAX_ROUTERS_COUNT  = 256 ,
+    bit MAX_AXI_DATA_WIDTH = 1024,
+
+    bit ROUTERS_REG_COUNT  = (MAX_ROUTERS_COUNT   / 128) + (MAX_ROUTERS_COUNT   % 128 != 0),
+    bit AXI_DATA_REG_COUNT = (MAX_AXI_DATA_WIDTH  / 128) + (MAX_AXI_DATA_WIDTH  % 128 != 0)
+) {
+    desc = "CSR of testing environment";
+
+    regfile testbed_channel_rf {
+        desc = "CSR of one channel";
+
+        default regwidth = 128;
+
+        reg testbed_control_status_r {
+            desc = "Testbed control and status register";
+
+            field {
+                desc = "Pointer to next struct";
+
+                hw = w;
+                sw = r;
+            } NEXT_PTR[63:32];
+
+            field {
+                desc = "Signal for the testbed to start loading PMU data to DMA, singlepulse";
+
+                singlepulse;
+
+                hw   = r;
+                sw   = rw;
+            } READ_PMU[3:3] = 0x0;
+
+            field {
+                desc = "Signal for the testbed to start modelling, singlepulse";
+
+                singlepulse;
+
+                hw   = r;
+                sw   = rw;
+            } START_MODEL[2:2] = 0x0;
+
+            field {
+                desc = "Negative reset signal status";
+
+                hw   = w;
+                sw   = r;
+            } RESETN_STATUS[1:1];
+
+            field {
+                desc = "Negative reset signal, write 0 to assert, write 1 to deassert";
+
+                hw   = r;
+                sw   = rw;
+            } RESETN_CONTROL[0:0] = 0x0;
+        };
+
+        reg testbed_loader_enable_r {
+            desc = "Loader enable register";
+
+            field {
+                desc = "1 if loader is active in testing, each bit for each loader in order";
+
+                hw   = r;
+                sw   = rw;
+            } LOADER_ENABLE[127:0] = 0x0;
+        };
+
+        reg testbed_loader_idle_r {
+            desc = "Loader idle register";
+
+            field {
+                desc = "1 if loader is idling, each bit for each loader in order";
+
+                hw   = w;
+                sw   = r;
+            } LOADER_IDLE[127:0];
+        };
+
+        reg testbed_rdata_r {
+            desc = "Current rdata from selected loader";
+
+            field {
+                desc = "Current rdata from selected loader";
+
+                hw   = w;
+                sw   = r;
+            } RDATA[127:0];
+        };
+
+        reg testbed_rdata_sel_r {
+            desc = "Loader rdata selection reg";
+
+            field {
+                desc = "Current rdata from selected loader";
+
+                hw   = r;
+                sw   = rw;
+            } RDATA_SEL[127:0] = 0x0;
+        };
+
+        testbed_control_status_r TESTBED_CONTROL_STATUS_REG                     ;
+        testbed_loader_enable_r  TESTBED_LOADER_ENABLE_REG  [ROUTERS_REG_COUNT ];
+        testbed_loader_idle_r    TESTBED_LOADER_IDLE_REG    [ROUTERS_REG_COUNT ];
+        testbed_rdata_r          TESTBED_RDATA_REG          [AXI_DATA_REG_COUNT];
+        testbed_rdata_sel_r      TESTBED_RDATA_SEL_REG                          ;
+    };
+
+    testbed_channel_rf TESTBED_CHANNEL_REGFILE[DMA_CHANNEL_COUNT] += 0xE0;
+
+};
+
+`endif

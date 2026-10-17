@@ -1,0 +1,4 @@
+submodules/src/rtl-lib
+submodules/src/AXI-NoC-with-built-in-PMUs
+submodules/src/Cyclone-V-PCIe-AVMM-DMA
+submodules/src/Kintex-7-PCIe-DMA

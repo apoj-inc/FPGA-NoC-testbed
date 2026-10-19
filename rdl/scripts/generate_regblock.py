@@ -47,7 +47,8 @@ try:
                 package_name = f"testbed_{arg}_am_pkg",
                 default_reset_activelow=True,
                 default_reset_async=True,
-                cpuif_cls=Avalon_Cpuif
+                cpuif_cls=Avalon_Cpuif,
+                retime_read_response=True
             )
         else:
             print("Wrong CPUIF")

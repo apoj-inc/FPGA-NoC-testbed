@@ -5,16 +5,16 @@ module testbed_altera #(
     parameter     DMA_OFFFSET_WIDTH                       = 22                       ,
 
     parameter int DMA_WORD_BYTES      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{16 }},
-    parameter int DMA_WQ_DEPTH        [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{256}},
-    parameter int DMA_RQ_DEPTH        [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{256}},
+    parameter int DMA_WQ_DEPTH        [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{64 }},
+    parameter int DMA_RQ_DEPTH        [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{64 }},
     parameter     DMA_TQ_DEPTH                            = 8                        ,
 
-    parameter     MAX_WQ_DEPTH                            = 256                      ,
-    parameter     MAX_RQ_DEPTH                            = 256                      ,
+    parameter     MAX_WQ_DEPTH                            = 64                       ,
+    parameter     MAX_RQ_DEPTH                            = 64                       ,
 
     parameter int ROUTERS_COUNT       [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{9 }} ,
     parameter int AXI_DATA_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{32}} ,
-    parameter int AXI_ADDR_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{16}} ,
+    parameter int AXI_ADDR_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{12}} ,
     parameter int AXI_ID_W_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{5 }} ,
     parameter int AXI_ID_R_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{5 }} ,
     parameter int AXI_LD_FIFO_DEPTH   [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{64}} ,
@@ -35,12 +35,12 @@ module testbed_altera #(
     logic                         dma_wrdata_valid_rd     [DMA_CHANNEL_COUNT];
     logic                         dma_wrdata_ready_rd     [DMA_CHANNEL_COUNT];
     logic [DMA_WQ_ADDR_WIDTH:0]   dma_wrdata_count_rd     [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_wrdata_data_rd      [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_wrdata_data_rd      [DMA_CHANNEL_COUNT];
 
     logic                         dma_rddata_valid_wr     [DMA_CHANNEL_COUNT];
     logic                         dma_rddata_ready_wr     [DMA_CHANNEL_COUNT];
     logic [DMA_RQ_ADDR_WIDTH:0]   dma_rddata_free_wr      [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_rddata_data_wr      [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_rddata_data_wr      [DMA_CHANNEL_COUNT];
 
     logic                         env_csr_m_chipselect                       ;
     logic [15:0]                  env_csr_m_byteenable                       ;
@@ -62,11 +62,11 @@ module testbed_altera #(
 
     logic                         dma_wrdata_valid_wr     [DMA_CHANNEL_COUNT];
     logic                         dma_wrdata_ready_wr     [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_wrdata_data_wr      [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_wrdata_data_wr      [DMA_CHANNEL_COUNT];
 
     logic                         dma_rddata_valid_rd     [DMA_CHANNEL_COUNT];
     logic                         dma_rddata_ready_rd     [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_rddata_data_rd      [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_rddata_data_rd      [DMA_CHANNEL_COUNT];
 
     apb4_intf #(
         .DATA_WIDTH(128),
@@ -82,15 +82,15 @@ module testbed_altera #(
         apb.PSEL    = '0;
         apb.PENABLE = '0;
 
-        avalon.read       = env_csr_m_read  & env_csr_m_chipselect;
-        avalon.write      = env_csr_m_write & env_csr_m_chipselect;
-        avalon.address    = env_csr_m_address >> 4                ; // Byte addressing to Word addressing
-        avalon.writedata  = env_csr_m_writedata                   ; 
-        avalon.byteenable = env_csr_m_byteenable                  ; 
+        avalon.read       = env_csr_m_read        ;
+        avalon.write      = env_csr_m_write       ;
+        avalon.address    = env_csr_m_address >> 4; // Byte addressing to Word addressing
+        avalon.writedata  = env_csr_m_writedata   ; 
+        avalon.byteenable = env_csr_m_byteenable  ; 
 
         env_csr_m_waitrequest   = avalon.waitrequest       ;
         env_csr_m_readdatavalid = avalon.readdatavalid     ;
-        env_csr_m_readdata      = avalon.writeresponsevalid;
+        env_csr_m_readdata      = avalon.readdata          ;
     end
 
     avmm_dma_toplevel #(

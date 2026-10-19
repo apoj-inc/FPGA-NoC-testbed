@@ -66,9 +66,19 @@ module testbed_testenv_am_avalon (
 
     logic cpuif_req_masked;
 
-    // Read & write latencies are balanced. Stalls not required
+    // Read latency > write latency. May need to delay next write that follows a read
+    logic [0:0] cpuif_req_stall_sr;
+    always_ff @(posedge clk or negedge arst_n) begin
+        if(~arst_n) begin
+            cpuif_req_stall_sr <= '0;
+        end else if(cpuif_req && !cpuif_req_is_wr) begin
+            cpuif_req_stall_sr <= '1;
+        end else begin
+            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
+        end
+    end
     assign cpuif_req_stall_rd = '0;
-    assign cpuif_req_stall_wr = '0;
+    assign cpuif_req_stall_wr = cpuif_req_stall_sr[0];
     assign cpuif_req_masked = cpuif_req
                             & !(!cpuif_req_is_wr & cpuif_req_stall_rd)
                             & !(cpuif_req_is_wr & cpuif_req_stall_wr);
@@ -183,131 +193,135 @@ module testbed_testenv_am_avalon (
     } field_storage_t;
     field_storage_t field_storage;
 
-    for(genvar i0=0; i0<8; i0++) begin
-        // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL
-        always_comb begin
-            automatic logic [0:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
-                next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-                load_next_c = '1;
-            end
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.next = next_c;
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge arst_n) begin
-            if(~arst_n) begin
-                field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value <= 1'h0;
-            end else begin
-                if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.load_next) begin
-                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.next;
-                end
-            end
-        end
-        assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value;
-        // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.START_MODEL
-        always_comb begin
-            automatic logic [0:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
-                next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
-                load_next_c = '1;
-            end else begin // singlepulse clears back to 0
-                next_c = '0;
-                load_next_c = '1;
-            end
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.next = next_c;
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge arst_n) begin
-            if(~arst_n) begin
-                field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value <= 1'h0;
-            end else begin
-                if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.load_next) begin
-                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.next;
-                end
-            end
-        end
-        assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value;
-        // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.READ_PMU
-        always_comb begin
-            automatic logic [0:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
-                next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
-                load_next_c = '1;
-            end else begin // singlepulse clears back to 0
-                next_c = '0;
-                load_next_c = '1;
-            end
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.next = next_c;
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge arst_n) begin
-            if(~arst_n) begin
-                field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value <= 1'h0;
-            end else begin
-                if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.load_next) begin
-                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.next;
-                end
-            end
-        end
-        assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value;
-        for(genvar i1=0; i1<2; i1++) begin
-            // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_LOADER_ENABLE_REG[].LOADER_ENABLE
+    generate
+        genvar i0;
+        for(i0=0; i0<8; i0++) begin : genblk_0
+            genvar i1;
+            // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL
             always_comb begin
-                automatic logic [127:0] next_c;
+                automatic logic [0:0] next_c;
                 automatic logic load_next_c;
-                next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value;
+                next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value;
                 load_next_c = '0;
-                if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1] && decoded_req_is_wr) begin // SW write
-                    next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value & ~decoded_wr_biten[127:0]) | (decoded_wr_data[127:0] & decoded_wr_biten[127:0]);
+                if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
+                    next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                     load_next_c = '1;
                 end
-                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.next = next_c;
-                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.load_next = load_next_c;
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.next = next_c;
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.load_next = load_next_c;
             end
             always_ff @(posedge clk or negedge arst_n) begin
                 if(~arst_n) begin
-                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value <= 128'h0;
+                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value <= 1'h0;
                 end else begin
-                    if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.load_next) begin
-                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.next;
+                    if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.load_next) begin
+                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.next;
                     end
                 end
             end
-            assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value;
-        end
-        // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_RDATA_SEL_REG.RDATA_SEL
-        always_comb begin
-            automatic logic [127:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG && decoded_req_is_wr) begin // SW write
-                next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value & ~decoded_wr_biten[127:0]) | (decoded_wr_data[127:0] & decoded_wr_biten[127:0]);
-                load_next_c = '1;
+            assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.RESETN_CONTROL.value;
+            // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.START_MODEL
+            always_comb begin
+                automatic logic [0:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value;
+                load_next_c = '0;
+                if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
+                    next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
+                    load_next_c = '1;
+                end else begin // singlepulse clears back to 0
+                    next_c = '0;
+                    load_next_c = '1;
+                end
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.next = next_c;
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.load_next = load_next_c;
             end
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.next = next_c;
-            field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge arst_n) begin
-            if(~arst_n) begin
-                field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value <= 128'h0;
-            end else begin
-                if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.load_next) begin
-                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.next;
+            always_ff @(posedge clk or negedge arst_n) begin
+                if(~arst_n) begin
+                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value <= 1'h0;
+                end else begin
+                    if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.load_next) begin
+                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.next;
+                    end
                 end
             end
+            assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.START_MODEL.value;
+            // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_CONTROL_STATUS_REG.READ_PMU
+            always_comb begin
+                automatic logic [0:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value;
+                load_next_c = '0;
+                if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG && decoded_req_is_wr) begin // SW write
+                    next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
+                    load_next_c = '1;
+                end else begin // singlepulse clears back to 0
+                    next_c = '0;
+                    load_next_c = '1;
+                end
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.next = next_c;
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.load_next = load_next_c;
+            end
+            always_ff @(posedge clk or negedge arst_n) begin
+                if(~arst_n) begin
+                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value <= 1'h0;
+                end else begin
+                    if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.load_next) begin
+                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.next;
+                    end
+                end
+            end
+            assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_CONTROL_STATUS_REG.READ_PMU.value;
+            for(i1=0; i1<2; i1++) begin : genblk_1
+                // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_LOADER_ENABLE_REG[].LOADER_ENABLE
+                always_comb begin
+                    automatic logic [127:0] next_c;
+                    automatic logic load_next_c;
+                    next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value;
+                    load_next_c = '0;
+                    if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1] && decoded_req_is_wr) begin // SW write
+                        next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value & ~decoded_wr_biten[127:0]) | (decoded_wr_data[127:0] & decoded_wr_biten[127:0]);
+                        load_next_c = '1;
+                    end
+                    field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.next = next_c;
+                    field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.load_next = load_next_c;
+                end
+                always_ff @(posedge clk or negedge arst_n) begin
+                    if(~arst_n) begin
+                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value <= 128'h0;
+                    end else begin
+                        if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.load_next) begin
+                            field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.next;
+                        end
+                    end
+                end
+                assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_LOADER_ENABLE_REG[i1].LOADER_ENABLE.value;
+            end
+            // Field: testbed_testenv_am.TESTBED_CHANNEL_REGFILE[].TESTBED_RDATA_SEL_REG.RDATA_SEL
+            always_comb begin
+                automatic logic [127:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value;
+                load_next_c = '0;
+                if(decoded_reg_strb.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG && decoded_req_is_wr) begin // SW write
+                    next_c = (field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value & ~decoded_wr_biten[127:0]) | (decoded_wr_data[127:0] & decoded_wr_biten[127:0]);
+                    load_next_c = '1;
+                end
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.next = next_c;
+                field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.load_next = load_next_c;
+            end
+            always_ff @(posedge clk or negedge arst_n) begin
+                if(~arst_n) begin
+                    field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value <= 128'h0;
+                end else begin
+                    if(field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.load_next) begin
+                        field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value <= field_combo.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.next;
+                    end
+                end
+            end
+            assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value;
         end
-        assign hwif_out.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value = field_storage.TESTBED_CHANNEL_REGFILE[i0].TESTBED_RDATA_SEL_REG.RDATA_SEL.value;
-    end
+    endgenerate
 
     //--------------------------------------------------------------------------
     // Write response
@@ -361,7 +375,16 @@ module testbed_testenv_am_avalon (
         readback_err = '0;
     end
 
-    assign cpuif_rd_ack = readback_done;
-    assign cpuif_rd_data = readback_data;
-    assign cpuif_rd_err = readback_err;
+    always_ff @(posedge clk or negedge arst_n) begin
+        if(~arst_n) begin
+            cpuif_rd_ack <= '0;
+            cpuif_rd_data <= '0;
+            cpuif_rd_err <= '0;
+        end else begin
+            cpuif_rd_ack <= readback_done;
+            cpuif_rd_data <= readback_data;
+            cpuif_rd_err <= readback_err;
+        end
+    end
+
 endmodule

@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
+#include <sys/time.h>
 
 #define FIFO_DEPTH 64
 #define PMU_METRIC_COUNT 19
@@ -35,6 +36,11 @@
 #define AXI_WSTRB_BYTES     (AXI_DATA_BYTES      / 8 + (AXI_DATA_BYTES      % 8 != 0))
 
 int main (int argc, char **argv) {
+    struct timeval time_of_day;
+    gettimeofday(&time_of_day, NULL);
+
+    srand((uint64_t)(time_of_day.tv_sec + time_of_day.tv_usec)); 
+
     if (argc < 2) {
         return -1;
     }
@@ -125,6 +131,7 @@ int main (int argc, char **argv) {
 
     wdata = 0x1;
     pwrite(usr_csr_fd, &wdata, 4, (off_t)0x0);
+    pread(usr_csr_fd, &rdata, 4, (off_t)0x0);
     do {
         pread(usr_csr_fd, &rdata, 4, (off_t)0x0);
     } while ((rdata & 0x3) >> 1 != 1);
@@ -132,6 +139,8 @@ int main (int argc, char **argv) {
 
     wdata = 0x0;
     pwrite(usr_csr_fd, &wdata, 4, (off_t)0x0);
+    pread(usr_csr_fd, &rdata, 4, (off_t)0x0);
+    printf("%x\n", rdata);
     do {
         pread(usr_csr_fd, &rdata, 4, (off_t)0x0);
     } while ((rdata & 0x3) >> 1 != 0);

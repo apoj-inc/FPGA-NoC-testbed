@@ -38,7 +38,9 @@ module testbed_axi_testenv_multiple #(
 
     function int max(int ARRAY [DMA_CHANNEL_COUNT]);
         max = 0;
-        foreach(ARRAY[i]) if (ARRAY[i]>max) max = ARRAY[i];  
+        for (int i = 0; i < DMA_CHANNEL_COUNT; i++) begin
+            if (ARRAY[i]>max) max = ARRAY[i];
+        end
     endfunction
 
     localparam MAX_ROUTERS_COUNT  = max(ROUTERS_COUNT) ;

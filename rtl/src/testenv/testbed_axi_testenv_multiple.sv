@@ -31,7 +31,7 @@ module testbed_axi_testenv_multiple #(
     apb4_intf.slave                        apb_slave                          ,
     avalon_mm_intf.agent                   avalon_slave                       ,
 
-    output logic                           user_irq_o      [DMA_CHANNEL_COUNT],
+    output logic [DMA_CHANNEL_COUNT-1:0]   user_irq_o                         ,
 
     input  logic                           clk_axi                            
 );

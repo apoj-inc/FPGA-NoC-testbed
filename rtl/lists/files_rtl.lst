@@ -8,4 +8,6 @@ rtl/src/testenv/testers/testbed_axi_master_loader.sv
 rtl/src/testenv/testers/testbed_axi_pmu.sv
 rtl/src/testenv/testbed_axi_testenv_multiple.sv
 rtl/src/testenv/testbed_axi_testenv_single.sv
+rtl/src/toplevels/testbed_xilinx.sv
+rtl/src/toplevels/testbed_altera.sv
 rtl/src/avalon_mm_intf.sv

@@ -1,1 +1,1 @@
-fpga/quartus/constraints/src/toplevel.sdc
+fpga/vivado/constraints/src/toplevel.xdc

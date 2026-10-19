@@ -7,8 +7,10 @@ module testbed_testenv_flatten #(
     parameter MAX_ROUTERS_COUNT  = 256     ,
     parameter MAX_AXI_DATA_WIDTH = 1024    ,
 
-    parameter ROUTERS_REG_COUNT  = (MAX_ROUTERS_COUNT   / 128) + (MAX_ROUTERS_COUNT   % 128 != 0),
-    parameter AXI_DATA_REG_COUNT = (MAX_AXI_DATA_WIDTH  / 128) + (MAX_AXI_DATA_WIDTH  % 128 != 0)
+    parameter ROUTERS_REG_DIV  = (MAX_ROUTERS_COUNT   / 128),
+    parameter ROUTERS_REG_REM  = (MAX_ROUTERS_COUNT   % 128),
+    parameter AXI_DATA_REG_DIV = (MAX_AXI_DATA_WIDTH  / 128),
+    parameter AXI_DATA_REG_REM = (MAX_AXI_DATA_WIDTH  % 128)                                   
 ) (
     input  logic                          clk_dma                               ,
     input  logic                          rst_n_dma                             ,
@@ -81,21 +83,24 @@ module testbed_testenv_flatten #(
 
                 rdata_sel_o   [i] = hwif_out.TESTBED_CHANNEL_REGFILE[i].TESTBED_RDATA_SEL_REG.RDATA_SEL.value          ;
 
-                for (int j = 0; j < ROUTERS_REG_COUNT; j++) begin
+                for (int j = 0; j < ROUTERS_REG_DIV; j++) begin
                     ld_enable_o[i][128*j +: 128] = hwif_out.TESTBED_CHANNEL_REGFILE[i].TESTBED_LOADER_ENABLE_REG[j].LOADER_ENABLE.value;
                 end
+                ld_enable_o[i][128*ROUTERS_REG_DIV +: ROUTERS_REG_REM] = hwif_out.TESTBED_CHANNEL_REGFILE[i].TESTBED_LOADER_ENABLE_REG[ROUTERS_REG_DIV].LOADER_ENABLE.value;
 
 
                 hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_CONTROL_STATUS_REG.NEXT_PTR.next      = 'hE0 * ((i+1) % DMA_CHANNEL_COUNT);
                 hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_CONTROL_STATUS_REG.RESETN_STATUS.next = testenv_rstn_sts_i[i];
 
-                for (int j = 0; j < ROUTERS_REG_COUNT; j++) begin
+                for (int j = 0; j < ROUTERS_REG_DIV; j++) begin
                     hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_LOADER_IDLE_REG[j].LOADER_IDLE.next = ld_idle_i[i][128*j +: 128];
                 end
+                hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_LOADER_IDLE_REG[ROUTERS_REG_DIV].LOADER_IDLE.next = ld_idle_i[i][128*ROUTERS_REG_DIV +: ROUTERS_REG_REM];
 
-                for (int j = 0; j < AXI_DATA_REG_COUNT; j++) begin
+                for (int j = 0; j < AXI_DATA_REG_DIV; j++) begin
                     hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_RDATA_REG[j].RDATA.next = rdata_i[i][128*j +: 128];
                 end
+                hwif_in.TESTBED_CHANNEL_REGFILE[i].TESTBED_RDATA_REG[AXI_DATA_REG_DIV].RDATA.next = rdata_i[i][128*AXI_DATA_REG_DIV +: AXI_DATA_REG_REM];
             end
         end
     endgenerate

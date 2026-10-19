@@ -14,7 +14,7 @@ module testbed_xilinx #(
 
     parameter int ROUTERS_COUNT       [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{9 }} ,
     parameter int AXI_DATA_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{32}} ,
-    parameter int AXI_ADDR_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{16}} ,
+    parameter int AXI_ADDR_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{12}} ,
     parameter int AXI_ID_W_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{5 }} ,
     parameter int AXI_ID_R_WIDTH      [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{5 }} ,
     parameter int AXI_LD_FIFO_DEPTH   [DMA_CHANNEL_COUNT] = '{DMA_CHANNEL_COUNT{64}} ,
@@ -47,6 +47,66 @@ module testbed_xilinx #(
     input  logic pci_exp_rx3_p,
     input  logic pci_exp_rx3_n
 );
+
+    logic                         dma_wrdata_valid_rd [DMA_CHANNEL_COUNT];
+    logic                         dma_wrdata_ready_rd [DMA_CHANNEL_COUNT];
+    logic [DMA_WQ_ADDR_WIDTH:0]   dma_wrdata_count_rd [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_wrdata_data_rd  [DMA_CHANNEL_COUNT];
+
+    logic                         dma_rddata_valid_wr [DMA_CHANNEL_COUNT];
+    logic                         dma_rddata_ready_wr [DMA_CHANNEL_COUNT];
+    logic [DMA_RQ_ADDR_WIDTH:0]   dma_rddata_free_wr  [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_rddata_data_wr  [DMA_CHANNEL_COUNT];
+
+    logic                         user_psel                              ;
+    logic                         user_penable                           ;
+    logic                         user_pready                            ;
+    logic [63:0]                  user_paddr                             ;
+    logic                         user_pwrite                            ;
+    logic [127:0]                 user_pwdata                            ;
+    logic [15:0]                  user_pstrb                             ;
+    logic [127:0]                 user_prdata                            ;
+
+    logic [DMA_CHANNEL_COUNT-1:0] user_irq                               ;
+
+    logic                         dma_clk                                ;
+    logic                         dma_resetn                             ;
+    logic                         pcie_resetn                            ;
+
+    logic                         dma_wrdata_valid_wr [DMA_CHANNEL_COUNT];
+    logic                         dma_wrdata_ready_wr [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_wrdata_data_wr  [DMA_CHANNEL_COUNT];
+
+    logic                         dma_rddata_valid_rd [DMA_CHANNEL_COUNT];
+    logic                         dma_rddata_ready_rd [DMA_CHANNEL_COUNT];
+    logic [127:0]                 dma_rddata_data_rd  [DMA_CHANNEL_COUNT];
+
+    apb4_intf #(
+        .DATA_WIDTH(128),
+        .ADDR_WIDTH(13 )
+    ) apb();
+
+    avalon_mm_intf #(
+        .DATA_WIDTH(128),
+        .ADDR_WIDTH(9  )
+    ) avalon();
+
+    always_comb begin
+        apb.PSEL    = user_psel   ;
+        apb.PENABLE = user_penable;
+        apb.PWRITE  = user_pwrite ;
+        apb.PADDR   = user_paddr  ;
+        apb.PWDATA  = user_pwdata ;
+        apb.PSTRB   = user_pstrb  ;
+
+        user_prdata = apb.PRDATA;
+        user_pready = apb.PREADY;
+
+        avalon.read       = '0;
+        avalon.write      = '0;
+    end
+
+    
 
     kdma_toplevel #(
         .BAR_COUNT         (4                 ),
@@ -114,116 +174,31 @@ module testbed_xilinx #(
         .pcie_resetn_o      (pcie_resetn        )
     );
 
+    logic feedback_clk;
+    logic pll_62_and_half_mhz;
 
+    PLLE2_BASE #(
+        .BANDWIDTH          ("OPTIMIZED"),
+        .CLKFBOUT_MULT      (8          ),
+        .CLKIN1_PERIOD      (8.000      ),
 
-    logic                         dma_wrdata_valid_rd [DMA_CHANNEL_COUNT];
-    logic                         dma_wrdata_ready_rd [DMA_CHANNEL_COUNT];
-    logic [DMA_WQ_ADDR_WIDTH:0]   dma_wrdata_count_rd [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_wrdata_data_rd  [DMA_CHANNEL_COUNT];
-
-    logic                         dma_rddata_valid_wr [DMA_CHANNEL_COUNT];
-    logic                         dma_rddata_ready_wr [DMA_CHANNEL_COUNT];
-    logic [DMA_RQ_ADDR_WIDTH:0]   dma_rddata_free_wr  [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_rddata_data_wr  [DMA_CHANNEL_COUNT];
-
-    logic                         user_psel                              ;
-    logic                         user_penable                           ;
-    logic                         user_pready                            ;
-    logic [63:0]                  user_paddr                             ;
-    logic                         user_pwrite                            ;
-    logic [127:0]                 user_pwdata                            ;
-    logic [15:0]                  user_pstrb                             ;
-    logic [127:0]                 user_prdata                            ;
-
-    logic [DMA_CHANNEL_COUNT-1:0] user_irq                               ;
-
-    logic                         dma_clk                                ;
-    logic                         dma_resetn                             ;
-    logic                         pcie_resetn                            ;
-
-    logic                         dma_wrdata_valid_wr [DMA_CHANNEL_COUNT];
-    logic                         dma_wrdata_ready_wr [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_wrdata_data_wr  [DMA_CHANNEL_COUNT];
-
-    logic                         dma_rddata_valid_rd [DMA_CHANNEL_COUNT];
-    logic                         dma_rddata_ready_rd [DMA_CHANNEL_COUNT];
-    logic [TX_DATA_WIDTH-1:0]     dma_rddata_data_rd  [DMA_CHANNEL_COUNT];
-
-    apb4_intf #(
-        .DATA_WIDTH(128),
-        .ADDR_WIDTH(13 )
-    ) apb();
-
-    avalon_mm_intf #(
-        .DATA_WIDTH(128),
-        .ADDR_WIDTH(9  )
-    ) avalon();
-
-    always_comb begin
-        apb.PSEL    = user_psel   ;
-        apb.PENABLE = user_penable;
-        apb.PWRITE  = user_pwrite ;
-        apb.PADDR   = user_paddr  ;
-        apb.PWDATA  = user_pwdata ;
-        apb.PSTRB   = user_pstrb  ;
-
-        user_prdata = apb.PRDATA;
-        user_pready = apb.PREADY;
-
-        avalon.read       = '0;
-        avalon.write      = '0;
-    end
-
-    avmm_dma_toplevel #(
-        .DMA_CHANNEL_COUNT (DMA_CHANNEL_COUNT ),
-
-        .DMA_BYTES_WIDTH   (DMA_BYTES_WIDTH   ),
-        .DMA_OFFFSET_WIDTH (DMA_OFFFSET_WIDTH ),
-
-        .DMA_WORD_BYTES    (DMA_WORD_BYTES    ),
-        .DMA_WQ_DEPTH      (DMA_WQ_DEPTH      ),
-        .DMA_RQ_DEPTH      (DMA_RQ_DEPTH      ),
-        .DMA_TQ_DEPTH      (DMA_TQ_DEPTH      ),
-
-        .MAX_WQ_DEPTH      (MAX_WQ_DEPTH      ),
-        .MAX_RQ_DEPTH      (MAX_RQ_DEPTH      )
-    ) u_avmm_dma_toplevel (
-
-        .FAN_CTRL                (FAN_CTRL               ),
-
-        .PCIE_PERST_n            (PCIE_PERST_n           ),
-        .PCIE_REFCLK_p           (PCIE_REFCLK_p          ),
-        .PCIE_RX_p               (PCIE_RX_p              ),
-        .PCIE_TX_p               (PCIE_TX_p              ),
-
-        .dma_wrdata_valid_i      (dma_wrdata_valid_rd    ),
-        .dma_wrdata_ready_o      (dma_wrdata_ready_rd    ),
-        .dma_wrdata_count_i      (dma_wrdata_count_rd    ),
-        .dma_wrdata_data_i       (dma_wrdata_data_rd     ),
-
-        .dma_rddata_valid_o      (dma_rddata_valid_wr    ),
-        .dma_rddata_ready_i      (dma_rddata_ready_wr    ),
-        .dma_rddata_free_i       (dma_rddata_free_wr     ),
-        .dma_rddata_data_o       (dma_rddata_data_wr     ),
-
+        .CLKOUT0_DIVIDE     (16         ),
+        .CLKOUT0_DUTY_CYCLE (0.5        ),
+        .CLKOUT0_PHASE      (0.0        ),
         
-        .env_csr_m_chipselect    (env_csr_m_chipselect   ),
-        .env_csr_m_byteenable    (env_csr_m_byteenable   ),
-        .env_csr_m_readdata      (env_csr_m_readdata     ),
-        .env_csr_m_writedata     (env_csr_m_writedata    ),
-        .env_csr_m_read          (env_csr_m_read         ),
-        .env_csr_m_write         (env_csr_m_write        ),
-        .env_csr_m_readdatavalid (env_csr_m_readdatavalid),
-        .env_csr_m_waitrequest   (env_csr_m_waitrequest  ),
-        .env_csr_m_address       (env_csr_m_address      ),
+        .DIVCLK_DIVIDE      (1          ),
+        .REF_JITTER1        (0.0        ),
+        .STARTUP_WAIT       ("FALSE"    )
+    ) u_PLLE2_BASE (
+        .CLKOUT0  (pll_62_and_half_mhz),
 
-        .user_irq_i              (user_irq               ),
+        .CLKFBOUT (feedback_clk       ),
+        .CLKIN1   (dma_clk            ),
 
-        .dma_clk_o               (dma_clk                ),
-        .dma_resetn_o            (dma_resetn             ),
-        .pcie_resetn_o           (pcie_resetn            ),
+        .PWRDWN   ('0                 ),
+        .RST      (~pcie_resetn       ),
 
-        .pll_50mhz_clk_o         (pll_50mhz_clk          )
+        .CLKFBIN  (feedback_clk       )
     );
 
     generate
@@ -302,6 +277,6 @@ module testbed_xilinx #(
 
         .user_irq_o      (user_irq           ),
 
-        .clk_axi         (dma_clk            )                   
+        .clk_axi         (pll_62_and_half_mhz)                   
     );
 endmodule

@@ -143,6 +143,8 @@ module testbed_axi_master_loader #(
     end
 
     always_comb begin
+        state_w_next = state_w;
+
         case (state_w)
             IDLE: begin
                 if (w_fifo_valid_rd && start_i) begin
@@ -295,6 +297,8 @@ module testbed_axi_master_loader #(
     end
 
     always_comb begin
+        state_r_next = state_r;
+
         case (state_r)
             IDLE: begin
                 if (r_fifo_valid_rd && start_i) begin

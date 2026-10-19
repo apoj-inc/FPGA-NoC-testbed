@@ -25,9 +25,13 @@ create_clock -period 10.000 -name clk_in_p [get_ports clk_in_p]
 set_false_path -to [get_pins u_kdma_toplevel/pclk_i1/S0]
 set_false_path -to [get_pins u_kdma_toplevel/pclk_i1/S1]
 
+create_generated_clock -name pll_clk [get_pins u_PLLE2_BASE/CLKOUT0]
 
-create_generated_clock -name clk_125mhz_x0y0 [get_pins u_kdma_toplevel/mmcm_i/CLKOUT0]
-create_generated_clock -name clk_250mhz_x0y0 [get_pins u_kdma_toplevel/mmcm_i/CLKOUT1]
+create_generated_clock -name clk_125mhz [get_pins u_kdma_toplevel/mmcm_i/CLKOUT0]
+create_generated_clock -name clk_250mhz [get_pins u_kdma_toplevel/mmcm_i/CLKOUT1]
+
+create_generated_clock -name user_250mhz [get_pins u_kdma_toplevel/mmcm_i/CLKOUT2]
+create_generated_clock -name user_125mhz [get_pins u_kdma_toplevel/mmcm_i/CLKOUT3]
 
 create_generated_clock -name clk_125mhz_mux_x0y0 \
 -source [get_pins u_kdma_toplevel/pclk_i1/I0] \
@@ -39,6 +43,16 @@ create_generated_clock -name clk_250mhz_mux_x0y0 \
 -master_clock [get_clocks -of [get_pins u_kdma_toplevel/pclk_i1/I1]] \
 [get_pins u_kdma_toplevel/pclk_i1/O]
 
-set_clock_groups -name pcieclkmux -physically_exclusive -group clk_125mhz_mux_x0y0 -group clk_250mhz_mux_x0y0
+set_clock_groups -name cdc -asynchronous  \
+    -group [get_clocks user_250mhz] \
+    -group [get_clocks pll_clk        ]
+
+set_clock_groups -name cdc -asynchronous  \
+    -group [get_clocks user_125mhz] \
+    -group [get_clocks pll_clk        ]
+
+set_clock_groups -name pcieclkmux -physically_exclusive \
+    -group [get_clocks clk_125mhz_mux_x0y0] \
+    -group [get_clocks clk_250mhz_mux_x0y0]
 
 set_false_path -from [get_ports sys_rst_n]

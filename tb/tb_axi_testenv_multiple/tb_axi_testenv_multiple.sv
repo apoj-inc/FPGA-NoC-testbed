@@ -45,7 +45,7 @@ logic [EXT_FIFO_DATA_WIDTH-1:0] pmu_data_apb         [DMA_CHANNEL_COUNT];
 logic                           pmu_valid_apb        [DMA_CHANNEL_COUNT];
 logic                           pmu_ready_apb        [DMA_CHANNEL_COUNT];
 
-logic                           user_irq_apb         [DMA_CHANNEL_COUNT];
+logic [DMA_CHANNEL_COUNT-1:0]   user_irq_apb                            ;
 
 logic [EXT_FIFO_DATA_WIDTH-1:0] command_data_avalon  [DMA_CHANNEL_COUNT];
 logic                           command_valid_avalon [DMA_CHANNEL_COUNT];
@@ -55,7 +55,7 @@ logic [EXT_FIFO_DATA_WIDTH-1:0] pmu_data_avalon      [DMA_CHANNEL_COUNT];
 logic                           pmu_valid_avalon     [DMA_CHANNEL_COUNT];
 logic                           pmu_ready_avalon     [DMA_CHANNEL_COUNT];
 
-logic                           user_irq_avalon      [DMA_CHANNEL_COUNT];
+logic [DMA_CHANNEL_COUNT-1:0]   user_irq_avalon                         ;
 
 always #4  clk_dma = ~clk_dma;
 always #10 clk_axi = ~clk_axi;

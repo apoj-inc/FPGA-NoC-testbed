@@ -264,6 +264,8 @@ initial begin
 
     @(posedge user_irq_apb[0]);
 
+    @(negedge user_irq_apb[0]);
+
     apb_apb_slave.PSEL    = '1;
     apb_apb_slave.PENABLE = '0;
     apb_apb_slave.PWRITE  = '1;

@@ -193,7 +193,9 @@ module testbed_axi_master_loader #(
         case (state_w)
             IDLE: begin
                 w_idle = '1;
-                finished_w_next = ~finished_clear_i;
+                if (finished_clear_i) begin
+                    finished_w_next = 0;
+                end
             end
             MOSI: begin
                 w_fifo_ready_rd = m_axi_i.AWREADY;
@@ -348,7 +350,9 @@ module testbed_axi_master_loader #(
         case (state_r)
             IDLE: begin
                 r_idle = '1;
-                finished_r_next = ~finished_clear_i;
+                if (finished_clear_i) begin
+                    finished_r_next = 0;
+                end
             end
             MOSI: begin
                 r_fifo_ready_rd = m_axi_i.ARREADY;

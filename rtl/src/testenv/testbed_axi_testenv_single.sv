@@ -19,27 +19,28 @@ module testbed_axi_testenv_single #(
     parameter AXI_MAX_ID_WIDTH = (AXI_ID_W_WIDTH > AXI_ID_R_WIDTH) ? AXI_ID_W_WIDTH : AXI_ID_R_WIDTH,
     parameter PMU_ADDR_WIDTH   = PMU_METRIC_COUNT == 1 ? 1 : $clog2(PMU_METRIC_COUNT)               
 ) (
-    input  logic                           clk_dma                        ,
-    input  logic                           rst_n_dma                      ,
+    input  logic                           clk_dma                            ,
+    input  logic                           rst_n_dma                          ,
 
-    input  logic [EXT_FIFO_DATA_WIDTH-1:0] command_data_i                 ,
-    input  logic                           command_valid_i                ,
-    output logic                           command_ready_o                ,
+    input  logic [EXT_FIFO_DATA_WIDTH-1:0] command_data_i                     ,
+    input  logic                           command_valid_i                    ,
+    output logic                           command_ready_o                    ,
 
-    output logic [EXT_FIFO_DATA_WIDTH-1:0] pmu_data_o                     ,
-    output logic                           pmu_valid_o                    ,
-    input  logic                           pmu_ready_i                    ,
+    output logic [EXT_FIFO_DATA_WIDTH-1:0] pmu_data_o                         ,
+    output logic                           pmu_valid_o                        ,
+    input  logic                           pmu_ready_i                        ,
 
-    input  logic                           ld_start_i                     ,
-    input  logic                           ld_read_pmu_i                  ,
-    output logic [ROUTERS_COUNT-1:0]       ld_idle_o                      ,
-    output logic [ROUTERS_COUNT-1:0]       ld_finished_o                  ,
-    output logic [AXI_DATA_WIDTH-1:0]      ld_rdata_o      [ROUTERS_COUNT],
+    input  logic                           ld_start_i                         ,
+    input  logic                           ld_read_pmu_i                      ,
+    output logic [ROUTERS_COUNT-1:0]       ld_idle_o                          ,
+    output logic [ROUTERS_COUNT-1:0]       ld_finished_o                      ,
+    input  logic                           ld_finished_clear_i                ,
+    output logic [AXI_DATA_WIDTH-1:0]      ld_rdata_o          [ROUTERS_COUNT],
 
-    input  logic                           clk_axi                        ,
-    input  logic                           rst_n_axi                      ,
+    input  logic                           clk_axi                            ,
+    input  logic                           rst_n_axi                          ,
 
-    axi_if.m                               m_axi_if_o      [ROUTERS_COUNT]                           
+    axi_if.m                               m_axi_if_o          [ROUTERS_COUNT]                           
 );
 
     logic [ROUTERS_COUNT-1:0]    ld_valid  ;
@@ -51,7 +52,7 @@ module testbed_axi_testenv_single #(
     logic [AXI_DATA_WIDTH-1:0]   wdata     ;
     logic [AXI_DATA_BYTES-1:0]   wstrb     ;
     
-    logic ld_start_resynced, ld_read_pmu_resynced;
+    logic ld_start_resynced, ld_read_pmu_resynced, ld_finished_clear_resynced;
 
     logic [ROUTERS_COUNT-1:0] ld_idle    , ld_idle_resynced    ;
     logic [ROUTERS_COUNT-1:0] ld_finished, ld_finished_resynced;
@@ -94,6 +95,27 @@ module testbed_axi_testenv_single #(
         .axlen_o     (axlen               ),
         .wdata_o     (wdata               ),
         .wstrb_o     (wstrb               )
+    );
+
+    cdc_stream_afifo #(
+        .DATA_WIDTH (1),
+        .ADDR_WIDTH (4)
+    ) u_cdc_stream_afifo_finished_clear_resync (
+        .clk_wr   (clk_dma                   ),
+        .rst_n_wr (rst_n_dma                 ),
+
+        .data_i   ('1                        ),
+        .valid_i  (ld_finished_clear_i       ),
+        .ready_o  (                          ),
+        .free_o   (                          ),
+
+        .clk_rd   (clk_axi                   ),
+        .rst_n_rd (rst_n_axi                 ),
+
+        .data_o   (                          ),
+        .valid_o  (ld_finished_clear_resynced),
+        .ready_i  ('1                        ),
+        .count_o  (                          )
     );
 
     cdc_stream_afifo #(
@@ -217,28 +239,29 @@ module testbed_axi_testenv_single #(
                 .FIFO_DEPTH     (AXI_LD_FIFO_DEPTH),
                 .LOADER_ID      (i                )
             ) u_testbed_axi_master_loader (
-                .clk_dma     (clk_dma          ),
-                .rst_n_dma   (rst_n_dma        ),
+                .clk_dma          (clk_dma                   ),
+                .rst_n_dma        (rst_n_dma                 ),
 
-                .resp_wait_i (resp_wait        ),
-                .id_i        (id               ),
-                .write_i     (write            ),
-                .axaddr_i    (axaddr           ),
-                .axlen_i     (axlen            ),
-                .wdata_i     (wdata            ),
-                .wstrb_i     (wstrb            ),
-                .fifo_push_i (ld_valid[i]      ),
+                .resp_wait_i      (resp_wait                 ),
+                .id_i             (id                        ),
+                .write_i          (write                     ),
+                .axaddr_i         (axaddr                    ),
+                .axlen_i          (axlen                     ),
+                .wdata_i          (wdata                     ),
+                .wstrb_i          (wstrb                     ),
+                .fifo_push_i      (ld_valid[i]               ),
 
-                .clk_axi     (clk_axi          ),
-                .rst_n_axi   (rst_n_axi        ),
+                .clk_axi          (clk_axi                   ),
+                .rst_n_axi        (rst_n_axi                 ),
 
-                .start_i     (ld_start_resynced),
-                .idle_o      (ld_idle[i]       ),
-                .finished_o  (ld_finished[i]   ),
+                .start_i          (ld_start_resynced         ),
+                .idle_o           (ld_idle[i]                ),
+                .finished_o       (ld_finished[i]            ),
+                .finished_clear_i (ld_finished_clear_resynced),
 
-                .rdata_o     (ld_rdata         ),
+                .rdata_o          (ld_rdata                  ),
 
-                .m_axi_if_o  (m_axi_if_o[i]    )
+                .m_axi_if_o       (m_axi_if_o[i]             )
             );
 
             testbed_axi_pmu #(

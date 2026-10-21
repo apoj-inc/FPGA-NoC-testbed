@@ -13,28 +13,29 @@ module testbed_axi_master_loader #(
     parameter AXI_DATA_BYTES = AXI_DATA_WIDTH / 8 + (AXI_DATA_WIDTH % 8 != 0)                       ,
     parameter AXI_MAX_ID_WIDTH = (AXI_ID_W_WIDTH > AXI_ID_R_WIDTH) ? AXI_ID_W_WIDTH : AXI_ID_R_WIDTH
 ) (
-    input  logic                        clk_dma     ,
-    input  logic                        rst_n_dma   ,
+    input  logic                        clk_dma         ,
+    input  logic                        rst_n_dma       ,
 
-    input  logic                        resp_wait_i ,
-    input  logic [AXI_MAX_ID_WIDTH-1:0] id_i        ,
-    input  logic                        write_i     ,
-    input  logic [AXI_ADDR_WIDTH-1:0]   axaddr_i    ,
-    input  logic [7:0]                  axlen_i     ,
-    input  logic [AXI_DATA_WIDTH-1:0]   wdata_i     ,
-    input  logic [AXI_DATA_BYTES-1:0]   wstrb_i     ,
-    input  logic                        fifo_push_i ,
+    input  logic                        resp_wait_i     ,
+    input  logic [AXI_MAX_ID_WIDTH-1:0] id_i            ,
+    input  logic                        write_i         ,
+    input  logic [AXI_ADDR_WIDTH-1:0]   axaddr_i        ,
+    input  logic [7:0]                  axlen_i         ,
+    input  logic [AXI_DATA_WIDTH-1:0]   wdata_i         ,
+    input  logic [AXI_DATA_BYTES-1:0]   wstrb_i         ,
+    input  logic                        fifo_push_i     ,
 
-    input  logic                        clk_axi     ,
-    input  logic                        rst_n_axi   ,
+    input  logic                        clk_axi         ,
+    input  logic                        rst_n_axi       ,
 
-    input  logic                        start_i     ,
-    output logic                        idle_o      ,
-    output logic                        finished_o  ,
+    input  logic                        start_i         ,
+    output logic                        idle_o          ,
+    output logic                        finished_o      ,
+    input  logic                        finished_clear_i,
 
-    output logic [AXI_DATA_WIDTH-1:0]   rdata_o     ,
+    output logic [AXI_DATA_WIDTH-1:0]   rdata_o         ,
 
-    axi_if.m                            m_axi_if_o  
+    axi_if.m                            m_axi_if_o      
 );
 
     `GENERATE_AXI_TYPEDEFS
@@ -192,6 +193,7 @@ module testbed_axi_master_loader #(
         case (state_w)
             IDLE: begin
                 w_idle = '1;
+                finished_w_next = ~finished_clear_i;
             end
             MOSI: begin
                 w_fifo_ready_rd = m_axi_i.AWREADY;
@@ -346,6 +348,7 @@ module testbed_axi_master_loader #(
         case (state_r)
             IDLE: begin
                 r_idle = '1;
+                finished_r_next = ~finished_clear_i;
             end
             MOSI: begin
                 r_fifo_ready_rd = m_axi_i.ARREADY;

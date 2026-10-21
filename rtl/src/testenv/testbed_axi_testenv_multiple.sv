@@ -87,11 +87,25 @@ module testbed_axi_testenv_multiple #(
         genvar i;
 
         for (i = 0; i < DMA_CHANNEL_COUNT; i++) begin : single_test_channel
-            logic [ROUTERS_COUNT[i]-1:0] ld_finished;
-            assign user_irq_o[i] = ~|(ld_finished ^ ld_enable[i][ROUTERS_COUNT[i]-1:0]) & |(ld_enable[i][ROUTERS_COUNT[i]-1:0]);
 
-            logic [AXI_DATA_WIDTH[i]-1:0] ld_rdata_loc [ROUTERS_COUNT[i]];
+            logic [AXI_DATA_WIDTH[i]-1:0] ld_rdata_loc      [ROUTERS_COUNT[i]];
+            logic [ROUTERS_COUNT[i]-1:0]  ld_finished                         ;
+            logic                         ld_finished_clear                   ;
+            logic                         user_irq_next                       ;
+
             assign rdata[i] = ld_rdata_loc[rdata_sel[i]];
+            assign ld_finished_clear = user_irq_o[i];
+
+            assign user_irq_next = ~|(ld_finished ^ ld_enable[i][ROUTERS_COUNT[i]-1:0]) & |(ld_enable[i][ROUTERS_COUNT[i]-1:0]);
+
+            always_ff @(posedge clk_dma or negedge rst_n_dma) begin : blockName
+                if (!rst_n_dma) begin
+                    user_irq_o[i] <= '0;
+                end
+                else begin
+                    user_irq_o[i] <= user_irq_next;
+                end
+            end
 
             axi_if #(
                 .AXI_DATA_WIDTH (AXI_DATA_WIDTH[i]),
@@ -124,27 +138,28 @@ module testbed_axi_testenv_multiple #(
                 .PMU_METRIC_COUNT    (PMU_METRIC_COUNT  [i]),
                 .PMU_DATA_WIDTH      (PMU_DATA_WIDTH    [i])
             ) u_testbed_axi_testenv_single (
-                .clk_dma         (clk_dma           ),
-                .rst_n_dma       (testenv_rstn      ),
+                .clk_dma             (clk_dma           ),
+                .rst_n_dma           (testenv_rstn      ),
 
-                .command_data_i  (command_data_i [i]),
-                .command_valid_i (command_valid_i[i]),
-                .command_ready_o (command_ready_o[i]),
+                .command_data_i      (command_data_i [i]),
+                .command_valid_i     (command_valid_i[i]),
+                .command_ready_o     (command_ready_o[i]),
 
-                .pmu_data_o      (pmu_data_o     [i]),
-                .pmu_valid_o     (pmu_valid_o    [i]),
-                .pmu_ready_i     (pmu_ready_i    [i]),
+                .pmu_data_o          (pmu_data_o     [i]),
+                .pmu_valid_o         (pmu_valid_o    [i]),
+                .pmu_ready_i         (pmu_ready_i    [i]),
 
-                .ld_start_i      (start_model    [i]),
-                .ld_read_pmu_i   (read_pmu       [i]),
-                .ld_idle_o       (ld_idle        [i]),
-                .ld_finished_o   (ld_finished       ),
-                .ld_rdata_o      (ld_rdata_loc      ),
+                .ld_start_i          (start_model    [i]),
+                .ld_read_pmu_i       (read_pmu       [i]),
+                .ld_idle_o           (ld_idle        [i]),
+                .ld_finished_o       (ld_finished       ),
+                .ld_finished_clear_i (ld_finished_clear ),
+                .ld_rdata_o          (ld_rdata_loc      ),
 
-                .clk_axi         (clk_axi),
-                .rst_n_axi       (axi_resetn_synced),
+                .clk_axi             (clk_axi           ),
+                .rst_n_axi           (axi_resetn_synced ),
 
-                .m_axi_if_o      (u_axi_if)
+                .m_axi_if_o          (u_axi_if          )
             );
 
             mesh #(.AXI_DATA_WIDTH(AXI_DATA_WIDTH[i]),

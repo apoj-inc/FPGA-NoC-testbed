@@ -125,7 +125,7 @@ module testbed_axi_testenv_multiple #(
                 .PMU_DATA_WIDTH      (PMU_DATA_WIDTH    [i])
             ) u_testbed_axi_testenv_single (
                 .clk_dma         (clk_dma           ),
-                .rst_n_dma       (rst_n_dma         ),
+                .rst_n_dma       (testenv_rstn      ),
 
                 .command_data_i  (command_data_i [i]),
                 .command_valid_i (command_valid_i[i]),

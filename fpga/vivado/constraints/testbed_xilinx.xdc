@@ -43,11 +43,11 @@ create_generated_clock -name clk_250mhz_mux_x0y0 \
 -master_clock [get_clocks -of [get_pins u_kdma_toplevel/pclk_i1/I1]] \
 [get_pins u_kdma_toplevel/pclk_i1/O]
 
-set_clock_groups -name cdc -asynchronous  \
+set_clock_groups -name cdc_250 -asynchronous  \
     -group [get_clocks user_250mhz] \
     -group [get_clocks pll_clk        ]
 
-set_clock_groups -name cdc -asynchronous  \
+set_clock_groups -name cdc_125 -asynchronous  \
     -group [get_clocks user_125mhz] \
     -group [get_clocks pll_clk        ]
 

@@ -8,6 +8,10 @@ rtl/src/testenv/testers/testbed_axi_master_loader.sv
 rtl/src/testenv/testers/testbed_axi_pmu.sv
 rtl/src/testenv/testbed_axi_testenv_multiple.sv
 rtl/src/testenv/testbed_axi_testenv_single.sv
+rtl/src/multifpga/testbed_multifpga_connector.sv
+rtl/src/multifpga/testbed_multifpga_cont.sv
+rtl/src/multifpga/testbed_multifpga_send.sv
+rtl/src/multifpga/testbed_multiple_receive.sv
 rtl/src/toplevels/testbed_xilinx.sv
 rtl/src/toplevels/testbed_altera.sv
 rtl/src/avalon_mm_intf.sv

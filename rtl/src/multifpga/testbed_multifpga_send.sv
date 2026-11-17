@@ -54,6 +54,7 @@ module testbed_multifpga_send #(
 
 
     state_input_t state_input_sync;
+    logic state_input_sync_valid;
 
     cdc_stream_afifo #(
         .DATA_WIDTH (2),
@@ -71,7 +72,7 @@ module testbed_multifpga_send #(
         .rst_n_rd (txrx_rstn_i),
 
         .data_o   (state_input_sync[1:0]),
-        .valid_o  (),
+        .valid_o  (state_input_sync_valid),
         .ready_i  (1'b1),
         .count_o  ()
     );
@@ -198,7 +199,7 @@ module testbed_multifpga_send #(
                 state_txrx_next = TXRX_IDLE;
             end
             TXRX_IDLE : begin
-                if (state_input_sync == INP_DATA) begin
+                if (state_input_sync == INP_DATA && state_input_sync_valid) begin
                     state_txrx_next = TXRX_SEND;
                 end
                 else begin
@@ -214,7 +215,7 @@ module testbed_multifpga_send #(
                 end
             end
             TXRX_ACK  : begin
-                if (state_input_sync == INP_IDLE) begin
+                if (state_input_sync == INP_IDLE && state_input_sync_valid) begin
                     state_txrx_next = TXRX_IDLE;
                 end
                 else begin

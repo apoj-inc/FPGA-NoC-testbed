@@ -286,4 +286,18 @@ initial begin
 
 end
 
+always @(posedge signal_clk_gated) begin
+    assert ({left_fifo_valid_rd, left_fifo_data_rd, left_fifo_ready_wr} == {right_fifo_valid_wr, right_fifo_data_wr, right_fifo_ready_rd}) 
+    else begin
+        $display("L to R error time %t", $time);
+        $finish();
+    end
+
+    assert ({right_fifo_valid_rd, right_fifo_data_rd, right_fifo_ready_wr} == {left_fifo_valid_wr, left_fifo_data_wr, left_fifo_ready_rd}) 
+    else begin
+        $display("R to L error time %t", $time);
+        $finish();
+    end
+end
+
 endmodule

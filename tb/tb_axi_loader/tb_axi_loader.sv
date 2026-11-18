@@ -85,7 +85,7 @@ module tb_axi_loader (
         rready        = axi_if.RREADY;
     end
 
-    testenv_axi_master_loader #(
+    testbed_axi_master_loader #(
         .AXI_DATA_WIDTH(8),
         .AXI_ADDR_WIDTH(12),
         .AXI_ID_W_WIDTH(5),
@@ -93,28 +93,29 @@ module tb_axi_loader (
         .FIFO_DEPTH(32),
         .LOADER_ID(1)
     ) dut (
-        .clk_in      (clk_i       ),
-        .rst_n_in    (arstn_i     ),
+        .clk_dma          (clk_i       ),
+        .rst_n_dma        (arstn_i     ),
 
 
-        .resp_wait_i (resp_wait_i ),
-        .id_i        (id_i        ),
-        .write_i     (write_i     ),
-        .axaddr_i    (axaddr_i    ),
-        .axlen_i     (axlen_i     ),
-        .wdata_i     (wdata_i     ),
-        .wstrb_i     (wstrb_i     ),
-        .fifo_push_i (fifo_push_i ),
+        .resp_wait_i      (resp_wait_i ),
+        .id_i             (id_i        ),
+        .write_i          (write_i     ),
+        .axaddr_i         (axaddr_i    ),
+        .axlen_i          (axlen_i     ),
+        .wdata_i          (wdata_i     ),
+        .wstrb_i          (wstrb_i     ),
+        .fifo_push_i      (fifo_push_i ),
 
-        .clk_axi     (clk_i       ),
-        .rst_n_axi   (arstn_i     ),
+        .clk_axi          (clk_i       ),
+        .rst_n_axi        (arstn_i     ),
 
-        .start_i     (start_i     ),
-        .idle_o      (idle_o      ),
+        .start_i          (start_i     ),
+        .idle_o           (idle_o      ),
+        .finished_clear_i ('0          ),
 
-        .rdata_o     (rdata_o     ),
+        .rdata_o          (rdata_o     ),
 
-        .m_axi_if_o  (axi_if      )
+        .m_axi_if_o       (axi_if      )
     );
     
 endmodule
